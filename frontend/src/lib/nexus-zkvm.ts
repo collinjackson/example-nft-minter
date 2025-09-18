@@ -2,14 +2,16 @@
  * Nexus zkVM SDK Integration
  * 
  * This module provides a clean interface for integrating with Nexus zkVM
- * When the official SDK becomes available, replace the mock implementations
- * with actual SDK calls.
+ * using the real WASM implementation extracted from the Nexus network client.
  */
+
+import { nexusWASMProver, WASMProofResult, ImageProvenanceInputs } from './nexus-wasm-prover';
 
 export interface ZKProof {
   proof: string;
   publicInputs: string[];
   verificationKey: string;
+  wasmResult?: WASMProofResult;
 }
 
 export interface ZKProofGenerationParams {
@@ -33,25 +35,29 @@ export class NexusZkVM {
   }
 
   /**
-   * Initialize the zkVM SDK
-   * In a real implementation, this would load the WebAssembly modules
+   * Initialize the zkVM SDK using real WASM implementation
    */
   async initialize(): Promise<void> {
-    console.log('🔧 Initializing Nexus zkVM SDK...');
+    if (this.isInitialized) {
+      return;
+    }
+
+    console.log('🔧 Initializing Nexus zkVM SDK with WASM...');
     
-    // Mock initialization - in reality this would:
-    // 1. Load WebAssembly modules
-    // 2. Initialize cryptographic primitives
-    // 3. Set up proof generation circuits
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    this.isInitialized = true;
-    
-    console.log('✅ Nexus zkVM SDK initialized');
+    try {
+      // Initialize the WASM prover
+      await nexusWASMProver.initialize();
+      this.isInitialized = true;
+      
+      console.log('✅ Nexus zkVM SDK initialized with WASM');
+    } catch (error) {
+      console.error('❌ Failed to initialize Nexus zkVM SDK:', error);
+      throw error;
+    }
   }
 
   /**
-   * Generate a zero-knowledge proof for image provenance
+   * Generate a zero-knowledge proof for image provenance using real WASM
    * 
    * @param params Parameters for proof generation
    * @returns ZK proof with public inputs and verification key
@@ -61,43 +67,49 @@ export class NexusZkVM {
       await this.initialize();
     }
 
-    console.log('🔐 Generating zero-knowledge proof...');
+    console.log('🔐 Generating zero-knowledge proof with WASM...');
     console.log('📊 Input parameters:', params);
 
-    // Mock proof generation - in reality this would:
-    // 1. Load the proof generation circuit
-    // 2. Execute the circuit with private inputs
-    // 3. Generate the proof using the proving key
-    // 4. Return the proof with public inputs
+    try {
+      // Prepare inputs for WASM prover
+      const wasmInputs: ImageProvenanceInputs = {
+        imageHash: params.imageHash,
+        manifestHash: params.manifestHash,
+        metadata: params.metadata
+      };
 
-    const proofData = {
-      imageHash: params.imageHash,
-      manifestHash: params.manifestHash,
-      timestamp: Date.now(),
-      metadata: params.metadata
-    };
+      // Generate proof using real WASM
+      const wasmResult = await nexusWASMProver.generateImageProvenanceProof(wasmInputs);
 
-    // Simulate proof generation time
-    await new Promise(resolve => setTimeout(resolve, 3000));
+      // Convert WASM result to ZK proof format
+      const proof: ZKProof = {
+        proof: this.bytesToHex(wasmResult.proof_hash),
+        publicInputs: [
+          params.imageHash,
+          params.manifestHash,
+          this.hashObject(params.metadata)
+        ],
+        verificationKey: this.generateVerificationKey(),
+        wasmResult: wasmResult
+      };
 
-    const proof: ZKProof = {
-      proof: this.generateMockProof(proofData),
-      publicInputs: [
-        params.imageHash,
-        params.manifestHash,
-        this.hashObject(params.metadata)
-      ],
-      verificationKey: this.generateVerificationKey()
-    };
+      console.log('✅ Zero-knowledge proof generated with WASM');
+      console.log('🔑 Proof hash:', proof.proof);
+      console.log('📊 WASM result:', {
+        blockCount: wasmResult.block_count,
+        proofBytesLength: wasmResult.proof_bytes.length,
+        proofHashLength: wasmResult.proof_hash.length
+      });
 
-    console.log('✅ Zero-knowledge proof generated');
-    console.log('🔑 Proof hash:', this.hashString(proof.proof));
-
-    return proof;
+      return proof;
+    } catch (error) {
+      console.error('❌ Error generating ZK proof with WASM:', error);
+      throw error;
+    }
   }
 
   /**
-   * Verify a zero-knowledge proof
+   * Verify a zero-knowledge proof using real WASM
    * 
    * @param params Parameters for proof verification
    * @returns True if proof is valid, false otherwise
@@ -107,35 +119,37 @@ export class NexusZkVM {
       await this.initialize();
     }
 
-    console.log('🔍 Verifying zero-knowledge proof...');
+    console.log('🔍 Verifying zero-knowledge proof with WASM...');
     console.log('📊 Verification parameters:', params);
 
-    // Mock proof verification - in reality this would:
-    // 1. Load the verification circuit
-    // 2. Verify the proof using the verification key
-    // 3. Check that public inputs match expected values
-    // 4. Return verification result
+    try {
+      // If we have WASM result, use it for verification
+      if (params.proof.wasmResult) {
+        const isValid = await nexusWASMProver.verifyProof(params.proof.wasmResult);
+        console.log(isValid ? '✅ WASM proof verification successful' : '❌ WASM proof verification failed');
+        return isValid;
+      }
 
-    // Simulate verification time
-    await new Promise(resolve => setTimeout(resolve, 1500));
+      // Fallback to basic validation
+      const isValid = params.proof.proof.length > 0 && 
+                     params.publicInputs.length > 0 && 
+                     params.verificationKey.length > 0;
 
-    // Mock validation logic
-    const isValid = params.proof.length > 0 && 
-                   params.publicInputs.length > 0 && 
-                   params.verificationKey.length > 0;
-
-    console.log(isValid ? '✅ Proof verification successful' : '❌ Proof verification failed');
-
-    return isValid;
+      console.log(isValid ? '✅ Basic proof verification successful' : '❌ Basic proof verification failed');
+      return isValid;
+    } catch (error) {
+      console.error('❌ Error verifying ZK proof with WASM:', error);
+      return false;
+    }
   }
 
   /**
-   * Generate a mock proof for demonstration
-   * In a real implementation, this would be replaced with actual proof generation
+   * Convert bytes to hex string
    */
-  private generateMockProof(data: any): string {
-    const proofString = JSON.stringify(data);
-    return this.hashString(proofString);
+  private bytesToHex(bytes: Uint8Array): string {
+    return Array.from(bytes)
+      .map(byte => byte.toString(16).padStart(2, '0'))
+      .join('');
   }
 
   /**
@@ -168,7 +182,7 @@ export class NexusZkVM {
    * Get SDK version and capabilities
    */
   getVersion(): string {
-    return '1.0.0-mock';
+    return '1.0.0-wasm';
   }
 
   /**
@@ -178,8 +192,9 @@ export class NexusZkVM {
     return [
       'proof-generation',
       'proof-verification',
-      'circuit-execution',
-      'cryptographic-hashing'
+      'wasm-integration',
+      'web-worker-support',
+      'image-provenance'
     ];
   }
 }
