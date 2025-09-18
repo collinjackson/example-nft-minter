@@ -1,5 +1,7 @@
 # Verifiable Image Provenance System
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This project is an open, verifiable image provenance system leveraging [Nexus zkVM](https://nexus.xyz) for zero-knowledge proof generation. Creators submit compressed image URLs along with cryptographic proofs of their C2PA manifests and hashes, generated client-side using Nexus zkVM, proving content authenticity without revealing raw originals.
 
 ---
@@ -172,7 +174,3 @@ verifiable-image-provenance/
 4. Automated verification will validate your submission
 5. Approved submissions merge into the public gallery
 
----
-
-## License
-MIT
