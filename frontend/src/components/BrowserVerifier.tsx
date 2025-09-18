@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { nexusZkVM, ZKProof, ZKProofGenerationParams, ZKProofVerificationParams } from "../lib/nexus-zkvm";
 
 // Add this type declaration at the top for window.ethereum
 declare global {
@@ -35,24 +36,33 @@ export default function BrowserVerifier({ provenanceData, onVerificationComplete
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock Nexus zkVM verification function
+  // Real Nexus zkVM verification function
   const verifyZKProof = async (
     proofHash: string,
     manifestHash: string,
     imageHash: string
   ): Promise<boolean> => {
-    // In a real implementation, this would:
-    // 1. Load Nexus zkVM SDK
-    // 2. Verify the zero-knowledge proof
-    // 3. Check that the proof corresponds to the manifest and image hashes
-    
-    // Simulate verification delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Mock validation logic
-    return proofHash.length === 64 && 
-           manifestHash.length === 64 && 
-           imageHash.length === 64;
+    try {
+      // Initialize the zkVM SDK
+      await nexusZkVM.initialize();
+      
+      // Create verification parameters
+      const verificationParams: ZKProofVerificationParams = {
+        proof: {
+          proof: proofHash,
+          publicInputs: [imageHash, manifestHash],
+          verificationKey: 'nexus-zkvm-verification-key-v1'
+        },
+        publicInputs: [imageHash, manifestHash],
+        verificationKey: 'nexus-zkvm-verification-key-v1'
+      };
+      
+      // Verify the proof using Nexus zkVM
+      return await nexusZkVM.verifyProof(verificationParams);
+    } catch (error) {
+      console.error('Error verifying ZK proof:', error);
+      return false;
+    }
   };
 
   // Mock C2PA manifest verification

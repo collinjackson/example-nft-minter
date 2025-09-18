@@ -2,6 +2,7 @@
 import { useState, useRef } from "react";
 import { ethers } from "ethers";
 import Link from "next/link";
+import { nexusZkVM, ZKProofGenerationParams } from "../../lib/nexus-zkvm";
 
 // Add this type declaration at the top for window.ethereum
 declare global {
@@ -64,24 +65,30 @@ export default function SubmitPage() {
   };
 
   const generateZKProof = async (manifestHash: string, imageHash: string): Promise<string> => {
-    // In a real implementation, this would use Nexus zkVM to generate a zero-knowledge proof
-    // For now, we'll create a mock proof hash
-    const proofData = {
-      manifestHash,
-      imageHash,
-      timestamp: Date.now(),
-      // This would be replaced with actual zkVM proof generation
-      zkvmProof: "mock-proof-" + Math.random().toString(36).substr(2, 9)
-    };
-    
-    const proofString = JSON.stringify(proofData);
-    const encoder = new TextEncoder();
-    const data = encoder.encode(proofString);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    return hashHex;
+    try {
+      // Initialize the zkVM SDK
+      await nexusZkVM.initialize();
+      
+      // Create proof generation parameters
+      const proofParams: ZKProofGenerationParams = {
+        imageHash,
+        manifestHash,
+        metadata: {
+          timestamp: Date.now(),
+          category: category,
+          version: '1.0.0'
+        }
+      };
+      
+      // Generate the zero-knowledge proof using Nexus zkVM
+      const proof = await nexusZkVM.generateProof(proofParams);
+      
+      // Return the proof hash
+      return proof.proof;
+    } catch (error) {
+      console.error('Error generating ZK proof:', error);
+      throw new Error('Failed to generate zero-knowledge proof');
+    }
   };
 
   const uploadImage = async (file: File): Promise<string> => {
