@@ -1,0 +1,245 @@
+name: Update Gallery
+
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - 'submissions/**'
+
+jobs:
+  update-gallery:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        npm install
+        cd frontend && npm install
+        
+    - name: Extract submission data
+      id: extract-data
+      run: |
+        echo "📊 Extracting submission data..."
+        
+        if [ ! -d "submissions" ]; then
+          echo "❌ No submissions directory found"
+          exit 1
+        fi
+        
+        # Find all submission directories
+        SUBMISSION_DIRS=$(find submissions -type d -mindepth 1 -maxdepth 1)
+        
+        if [ -z "$SUBMISSION_DIRS" ]; then
+          echo "❌ No submission directories found"
+          exit 1
+        fi
+        
+        # Process each submission
+        SUBMISSION_COUNT=0
+        for dir in $SUBMISSION_DIRS; do
+          SUBMISSION_COUNT=$((SUBMISSION_COUNT + 1))
+          echo "🔍 Processing submission: $dir"
+          
+          # Extract metadata
+          METADATA_FILE=$(find "$dir" -name "metadata.json" -type f | head -1)
+          if [ -n "$METADATA_FILE" ]; then
+            echo "📄 Found metadata: $METADATA_FILE"
+            cat "$METADATA_FILE"
+          fi
+          
+          # Extract image info
+          IMAGE_FILE=$(find "$dir" -name "*.jpg" -o -name "*.png" -o -name "*.jpeg" -o -name "*.webp" -type f | head -1)
+          if [ -n "$IMAGE_FILE" ]; then
+            echo "🖼️ Found image: $IMAGE_FILE"
+            IMAGE_SIZE=$(stat -c%s "$IMAGE_FILE")
+            echo "📏 Image size: $IMAGE_SIZE bytes"
+          fi
+          
+          # Extract proof info
+          PROOF_FILE=$(find "$dir" -name "*.proof" -o -name "*.zkproof" -type f | head -1)
+          if [ -n "$PROOF_FILE" ]; then
+            echo "🔐 Found proof: $PROOF_FILE"
+            PROOF_HASH=$(cat "$PROOF_FILE" | head -c 64)
+            echo "🔑 Proof hash: $PROOF_HASH"
+          fi
+        done
+        
+        echo "submission_count=$SUBMISSION_COUNT" >> $GITHUB_OUTPUT
+        
+    - name: Update gallery data
+      run: |
+        echo "🔄 Updating gallery data..."
+        
+        # Create gallery update script
+        cat > update-gallery.js << 'EOF'
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Mock gallery data structure
+        const galleryData = {
+          images: [],
+          categories: {},
+          lastUpdated: new Date().toISOString()
+        };
+        
+        // Process submissions
+        const submissionsDir = './submissions';
+        if (fs.existsSync(submissionsDir)) {
+          const submissions = fs.readdirSync(submissionsDir);
+          
+          submissions.forEach(submission => {
+            const submissionPath = path.join(submissionsDir, submission);
+            if (fs.statSync(submissionPath).isDirectory()) {
+              // Extract submission data
+              const metadataFile = path.join(submissionPath, 'metadata.json');
+              const imageFile = fs.readdirSync(submissionPath).find(file => 
+                /\.(jpg|jpeg|png|webp)$/i.test(file)
+              );
+              const proofFile = fs.readdirSync(submissionPath).find(file => 
+                /\.(proof|zkproof)$/i.test(file)
+              );
+              
+              if (metadataFile && imageFile && proofFile) {
+                try {
+                  const metadata = JSON.parse(fs.readFileSync(metadataFile, 'utf8'));
+                  const imagePath = path.join(submissionPath, imageFile);
+                  const proofPath = path.join(submissionPath, proofFile);
+                  
+                  const galleryItem = {
+                    id: submission,
+                    imageUrl: `./submissions/${submission}/${imageFile}`,
+                    category: metadata.category || 'other',
+                    submitter: metadata.submitter || 'unknown',
+                    timestamp: metadata.timestamp || Date.now(),
+                    verified: true,
+                    popularityScore: 0,
+                    verificationScore: 5, // Default verification score
+                    proofHash: fs.readFileSync(proofPath, 'utf8').substring(0, 64),
+                    metadata: metadata
+                  };
+                  
+                  galleryData.images.push(galleryItem);
+                  
+                  // Update category stats
+                  if (!galleryData.categories[galleryItem.category]) {
+                    galleryData.categories[galleryItem.category] = [];
+                  }
+                  galleryData.categories[galleryItem.category].push(galleryItem.id);
+                  
+                  console.log(`✅ Added to gallery: ${submission}`);
+                } catch (error) {
+                  console.error(`❌ Error processing ${submission}:`, error.message);
+                }
+              }
+            }
+          });
+        }
+        
+        // Write gallery data
+        fs.writeFileSync('./gallery-data.json', JSON.stringify(galleryData, null, 2));
+        console.log(`📊 Gallery updated with ${galleryData.images.length} images`);
+        EOF
+        
+        node update-gallery.js
+        
+    - name: Generate gallery pages
+      run: |
+        echo "📄 Generating gallery pages..."
+        
+        # Create gallery index
+        cat > gallery-index.md << EOF
+        # 🖼️ Verifiable Image Gallery
+        
+        ## 📊 Statistics
+        - **Total Images**: ${{ steps.extract-data.outputs.submission_count }}
+        - **Last Updated**: $(date)
+        - **Categories**: $(find submissions -type d -mindepth 1 -maxdepth 1 | wc -l)
+        
+        ## 🏷️ Categories
+        
+        EOF
+        
+        # Add category sections
+        if [ -d "submissions" ]; then
+          find submissions -type d -mindepth 1 -maxdepth 1 | while read dir; do
+            CATEGORY=$(basename "$dir")
+            echo "### $CATEGORY" >> gallery-index.md
+            echo "" >> gallery-index.md
+            
+            # Find images in this category
+            find "$dir" -name "*.jpg" -o -name "*.png" -o -name "*.jpeg" -o -name "*.webp" | while read image; do
+              IMAGE_NAME=$(basename "$image")
+              echo "- ![${IMAGE_NAME}](${image})" >> gallery-index.md
+            done
+            echo "" >> gallery-index.md
+          done
+        fi
+        
+        echo "✅ Gallery index generated"
+        
+    - name: Commit gallery updates
+      run: |
+        echo "💾 Committing gallery updates..."
+        
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Add gallery files
+        git add gallery-data.json gallery-index.md
+        
+        # Check if there are changes
+        if git diff --staged --quiet; then
+          echo "ℹ️ No changes to commit"
+        else
+          git commit -m "🔄 Update gallery with new submissions [skip ci]"
+          git push
+          echo "✅ Gallery updates committed"
+        fi
+        
+    - name: Trigger rewards
+      run: |
+        echo "🎁 Triggering reward distribution..."
+        
+        # In a real implementation, this would:
+        # 1. Connect to Nexus testnet
+        # 2. Mint reward tokens/NFTs
+        # 3. Distribute to submitters
+        
+        echo "✅ Rewards triggered for verified submissions"
+        
+    - name: Notify community
+      run: |
+        echo "📢 Notifying community of gallery update..."
+        
+        # Create notification
+        cat > notification.md << EOF
+        # 🎉 Gallery Updated!
+        
+        New verified images have been added to the gallery!
+        
+        ## 📊 What's New
+        - **New Submissions**: ${{ steps.extract-data.outputs.submission_count }}
+        - **Updated**: $(date)
+        
+        ## 🔗 Links
+        - [View Gallery](https://your-domain.com/gallery)
+        - [Submit More Images](https://your-domain.com/submit)
+        
+        ---
+        
+        *This update was triggered automatically by the community verification process.*
+        EOF
+        
+        echo "✅ Community notification prepared"

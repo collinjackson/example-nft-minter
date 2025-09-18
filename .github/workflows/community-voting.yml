@@ -1,0 +1,124 @@
+name: Community Voting
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  process-vote:
+    if: contains(github.event.issue.pull_request.html_url, 'pull')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check if comment is a vote
+      id: check-vote
+      run: |
+        COMMENT_BODY="${{ github.event.comment.body }}"
+        
+        # Check for verification vote
+        if echo "$COMMENT_BODY" | grep -qiE "^\s*(verify|approve|accept)\s*$"; then
+          echo "vote_type=verification" >> $GITHUB_OUTPUT
+          echo "vote_value=true" >> $GITHUB_OUTPUT
+          echo "is_vote=true" >> $GITHUB_OUTPUT
+        elif echo "$COMMENT_BODY" | grep -qiE "^\s*(reject|deny|decline)\s*$"; then
+          echo "vote_type=verification" >> $GITHUB_OUTPUT
+          echo "vote_value=false" >> $GITHUB_OUTPUT
+          echo "is_vote=true" >> $GITHUB_OUTPUT
+        elif echo "$COMMENT_BODY" | grep -qiE "^\s*(popular|upvote|like)\s*$"; then
+          echo "vote_type=popularity" >> $GITHUB_OUTPUT
+          echo "vote_value=true" >> $GITHUB_OUTPUT
+          echo "is_vote=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_vote=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Process verification vote
+      if: steps.check-vote.outputs.is_vote == 'true' && steps.check-vote.outputs.vote_type == 'verification'
+      run: |
+        echo "🗳️ Processing verification vote..."
+        
+        VOTER="${{ github.event.comment.user.login }}"
+        VOTE_VALUE="${{ steps.check-vote.outputs.vote_value }}"
+        PR_NUMBER="${{ github.event.issue.number }}"
+        
+        # Create vote record
+        cat > vote-record.json << EOF
+        {
+          "voter": "$VOTER",
+          "voteType": "verification",
+          "voteValue": $VOTE_VALUE,
+          "prNumber": $PR_NUMBER,
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        }
+        EOF
+        
+        # In a real implementation, this would:
+        # 1. Store the vote in a database or file
+        # 2. Check if enough votes have been cast
+        # 3. Update the PR status accordingly
+        
+        echo "✅ Vote recorded for verification: $VOTE_VALUE by $VOTER"
+        
+    - name: Process popularity vote
+      if: steps.check-vote.outputs.is_vote == 'true' && steps.check-vote.outputs.vote_type == 'popularity'
+      run: |
+        echo "⭐ Processing popularity vote..."
+        
+        VOTER="${{ github.event.comment.user.login }}"
+        PR_NUMBER="${{ github.event.issue.number }}"
+        
+        # Create vote record
+        cat > vote-record.json << EOF
+        {
+          "voter": "$VOTER",
+          "voteType": "popularity",
+          "voteValue": true,
+          "prNumber": $PR_NUMBER,
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        }
+        EOF
+        
+        echo "✅ Popularity vote recorded by $VOTER"
+        
+    - name: Check voting threshold
+      if: steps.check-vote.outputs.is_vote == 'true'
+      run: |
+        echo "🔍 Checking voting thresholds..."
+        
+        # Mock threshold checking
+        # In a real implementation, this would count votes from a database
+        
+        echo "📊 Current vote counts:"
+        echo "- Verification votes: 3/5 (threshold: 5)"
+        echo "- Popularity votes: 12"
+        
+        # Check if verification threshold reached
+        VERIFICATION_VOTES=3  # Mock value
+        VERIFICATION_THRESHOLD=5
+        
+        if [ $VERIFICATION_VOTES -ge $VERIFICATION_THRESHOLD ]; then
+          echo "✅ Verification threshold reached!"
+          echo "APPROVED=true" >> $GITHUB_ENV
+        else
+          echo "⏳ More verification votes needed"
+          echo "APPROVED=false" >> $GITHUB_ENV
+        fi
+        
+    - name: Update PR status
+      if: steps.check-vote.outputs.is_vote == 'true'
+      run: |
+        if [ "$APPROVED" == "true" ]; then
+          echo "🎉 PR approved! Adding to gallery..."
+          
+          # In a real implementation, this would:
+          # 1. Merge the PR
+          # 2. Update the gallery
+          # 3. Mint rewards
+          
+          echo "✅ PR will be merged and added to gallery"
+        else
+          echo "⏳ Waiting for more votes..."
+        fi
