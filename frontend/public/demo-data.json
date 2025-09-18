@@ -1,0 +1,158 @@
+{
+  "images": [
+    {
+      "id": "demo-1",
+      "imageUrl": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
+      "category": "photography",
+      "submitter": "0x1234567890123456789012345678901234567890",
+      "timestamp": 1704067200000,
+      "verified": true,
+      "popularityScore": 89,
+      "verificationScore": 12,
+      "nftContract": "0xabcd123456789012345678901234567890123456",
+      "tokenId": 1,
+      "title": "Mountain Landscape",
+      "description": "A beautiful mountain landscape captured during golden hour",
+      "proofHash": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2",
+      "manifestHash": "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3"
+    },
+    {
+      "id": "demo-2",
+      "imageUrl": "https://images.unsplash.com/photo-1579952363873-27d3bfad9c0d?w=400&h=300&fit=crop",
+      "category": "ai-generated",
+      "submitter": "0x2345678901234567890123456789012345678901",
+      "timestamp": 1704153600000,
+      "verified": true,
+      "popularityScore": 67,
+      "verificationScore": 9,
+      "nftContract": "0xbcde234567890123456789012345678901234567",
+      "tokenId": 2,
+      "title": "AI Art Creation",
+      "description": "Abstract digital art generated using AI algorithms",
+      "proofHash": "c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4",
+      "manifestHash": "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5"
+    },
+    {
+      "id": "demo-3",
+      "imageUrl": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop",
+      "category": "digital-art",
+      "submitter": "0x3456789012345678901234567890123456789012",
+      "timestamp": 1704240000000,
+      "verified": false,
+      "popularityScore": 34,
+      "verificationScore": 4,
+      "nftContract": "0xcdef345678901234567890123456789012345678",
+      "tokenId": 3,
+      "title": "Digital Painting",
+      "description": "Hand-crafted digital painting with unique artistic style",
+      "proofHash": "e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6",
+      "manifestHash": "f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7"
+    },
+    {
+      "id": "demo-4",
+      "imageUrl": "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=300&fit=crop",
+      "category": "live-camera",
+      "submitter": "0x4567890123456789012345678901234567890123",
+      "timestamp": 1704326400000,
+      "verified": true,
+      "popularityScore": 156,
+      "verificationScore": 15,
+      "nftContract": "0xdefg456789012345678901234567890123456789",
+      "tokenId": 4,
+      "title": "Live Camera Feed",
+      "description": "Real-time camera feed from a public location",
+      "proofHash": "g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8",
+      "manifestHash": "h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9"
+    },
+    {
+      "id": "demo-5",
+      "imageUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+      "category": "screenshot",
+      "submitter": "0x5678901234567890123456789012345678901234",
+      "timestamp": 1704412800000,
+      "verified": false,
+      "popularityScore": 23,
+      "verificationScore": 2,
+      "nftContract": "0xefgh567890123456789012345678901234567890",
+      "tokenId": 5,
+      "title": "Data Visualization",
+      "description": "Screenshot of an important data visualization",
+      "proofHash": "i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0",
+      "manifestHash": "j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1"
+    },
+    {
+      "id": "demo-6",
+      "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+      "category": "photography",
+      "submitter": "0x6789012345678901234567890123456789012345",
+      "timestamp": 1704499200000,
+      "verified": true,
+      "popularityScore": 203,
+      "verificationScore": 18,
+      "nftContract": "0xfghi678901234567890123456789012345678901",
+      "tokenId": 6,
+      "title": "Portrait Photography",
+      "description": "Professional portrait with excellent lighting",
+      "proofHash": "k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2",
+      "manifestHash": "l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3"
+    }
+  ],
+  "categories": {
+    "photography": ["demo-1", "demo-6"],
+    "ai-generated": ["demo-2"],
+    "digital-art": ["demo-3"],
+    "live-camera": ["demo-4"],
+    "screenshot": ["demo-5"]
+  },
+  "leaderboard": [
+    {
+      "address": "0x6789012345678901234567890123456789012345",
+      "totalSubmissions": 8,
+      "verifiedSubmissions": 6,
+      "totalPopularityScore": 450,
+      "averageVerificationScore": 8.5,
+      "rank": 1
+    },
+    {
+      "address": "0x4567890123456789012345678901234567890123",
+      "totalSubmissions": 6,
+      "verifiedSubmissions": 5,
+      "totalPopularityScore": 380,
+      "averageVerificationScore": 7.8,
+      "rank": 2
+    },
+    {
+      "address": "0x1234567890123456789012345678901234567890",
+      "totalSubmissions": 4,
+      "verifiedSubmissions": 3,
+      "totalPopularityScore": 320,
+      "averageVerificationScore": 8.2,
+      "rank": 3
+    },
+    {
+      "address": "0x2345678901234567890123456789012345678901",
+      "totalSubmissions": 5,
+      "verifiedSubmissions": 4,
+      "totalPopularityScore": 290,
+      "averageVerificationScore": 7.5,
+      "rank": 4
+    },
+    {
+      "address": "0x3456789012345678901234567890123456789012",
+      "totalSubmissions": 3,
+      "verifiedSubmissions": 2,
+      "totalPopularityScore": 250,
+      "averageVerificationScore": 8.0,
+      "rank": 5
+    }
+  ],
+  "stats": {
+    "totalImages": 6,
+    "verifiedImages": 4,
+    "totalContributors": 5,
+    "totalCategories": 5,
+    "totalPopularityScore": 572,
+    "averageVerificationScore": 8.3
+  },
+  "lastUpdated": "2024-01-02T00:00:00.000Z"
+}
